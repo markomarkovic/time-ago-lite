@@ -11,7 +11,7 @@ const SUFFIXES = [
 ];
 export const oneLevelTimeAgo = (date: Date, suffixes = SUFFIXES): string => {
     const time = date.getTime();
-    const diffSecondsFromNow = (time - new Date().getTime()) / 1000;
+    const diffSecondsFromNow = (new Date().getTime() - time) / 1000;
     if (diffSecondsFromNow < 120) {
         return `${suffixes[0]}`;
     } else if (diffSecondsFromNow < 3600) {

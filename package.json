@@ -18,6 +18,12 @@
     "bugs": {
         "url": "https://github.com/uranium93/time-ago-lite/issues"
     },
+    "keywords": [
+        "time",
+        "ago",
+        "time ago",
+        "minutes"
+    ],
     "devDependencies": {
         "@types/express": "^4.17.6",
         "@types/jest": "^26.0.13",
