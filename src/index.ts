@@ -1,34 +1,79 @@
-const SUFFIXES = [
-    'Just Now',
-    'Minutes Ago',
-    '1 Hour Ago',
-    'Hours Ago',
-    '1 Day Ago',
-    'Days Ago',
-    '1 Month Ago',
-    'Months Ago',
-    'Years Ago',
-];
-export const oneLevelTimeAgo = (date: Date, suffixes = SUFFIXES): string => {
-    const time = date.getTime();
-    const diffSecondsFromNow = (new Date().getTime() - time) / 1000;
-    if (diffSecondsFromNow < 120) {
-        return `${suffixes[0]}`;
-    } else if (diffSecondsFromNow < 3600) {
-        return `${Math.floor(diffSecondsFromNow / 60)} ${suffixes[1]}`;
-    } else if (diffSecondsFromNow < 7200) {
-        return `${suffixes[2]}`;
-    } else if (diffSecondsFromNow < 86400) {
-        return `${Math.floor(diffSecondsFromNow / 3600)} ${suffixes[3]}`;
-    } else if (diffSecondsFromNow < 172800) {
-        return `${suffixes[4]}`;
-    } else if (diffSecondsFromNow < 2592000) {
-        return `${Math.floor(diffSecondsFromNow / 86400)} ${suffixes[5]}`;
-    } else if (diffSecondsFromNow < 5184000) {
-        return `${suffixes[6]}`;
-    } else if (diffSecondsFromNow < 155520000) {
-        return `${Math.floor(diffSecondsFromNow / 2592000)} ${suffixes[7]}`;
-    } else {
-        return `${Math.floor(diffSecondsFromNow / 31104000)} ${suffixes[8]}`;
+import c from './constants';
+/**
+ * A function to give the unit word correctly pluralized based on locale rules,
+ * including the number itself.
+ *
+ * @param number How many of the unit
+ * @param unitKey Which unit to use:
+ */
+interface wordsFn {
+    (
+        //
+        number?: number,
+        unitKey?: 'now' | 'minute' | 'hour' | 'day' | 'month' | 'year',
+        isInPast?: boolean,
+    ): string;
+}
+
+/**
+ * Words function based on English rules
+ */
+const enWords: wordsFn = (number = 1, unitKey = 'now', isInPast = true) => {
+    const words = {
+        now: 'just now',
+        minute: ['{{n}} minute', '{{n}} minutes'],
+        hour: ['{{n}} hour', '{{n}} hours'],
+        day: ['{{n}} day', '{{n}} days'],
+        month: ['{{n}} month', '{{n}} months'],
+        year: ['{{n}} year', '{{n}} years'],
+    };
+    if (unitKey === 'now') {
+        return words['now'];
     }
+    const word =
+        number === 1
+            ? words[unitKey][0].replace('{{n}}', number.toString())
+            : words[unitKey][1].replace('{{n}}', number.toString());
+    return isInPast ? `${word} ago` : `in ${word}`;
 };
+
+const relativeTime = (words: wordsFn = enWords) => (date: Date): string => {
+    // We don't care about milliseconds
+    const now = new Date(new Date().setMilliseconds(0)).getTime();
+    const time = new Date(date.setMilliseconds(0)).getTime();
+    const isInPast = time < now;
+    const diff = Math.abs(time - now);
+
+    if (diff < 2 * c.minute) {
+        return words(1, 'now');
+    }
+    if (diff < c.hour) {
+        return words(Math.round(diff / c.minute), 'minute', isInPast);
+    }
+    if (diff < 2 * c.hour) {
+        return words(1, 'hour', isInPast);
+    }
+    if (diff < c.day) {
+        return words(Math.round(diff / c.hour), 'hour', isInPast);
+    }
+    if (diff < 2 * c.day) {
+        return words(1, 'day', isInPast);
+    }
+    if (diff < c.month) {
+        return words(Math.round(diff / c.day), 'day', isInPast);
+    }
+    if (diff < 2 * c.month) {
+        return words(1, 'month', isInPast);
+    }
+    if (diff < c.year) {
+        return words(Math.round(diff / c.month), 'month', isInPast);
+    }
+    if (diff < 4 * c.year) {
+        return words(Math.round(diff / c.month), 'month', isInPast);
+    }
+    return words(Math.round(diff / c.year), 'year', isInPast);
+};
+
+const relativeTimeEn = relativeTime();
+
+export { wordsFn, relativeTime, relativeTimeEn };
